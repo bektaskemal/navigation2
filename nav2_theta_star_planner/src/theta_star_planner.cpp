@@ -86,7 +86,8 @@ void ThetaStarPlanner::deactivate()
 
 nav_msgs::msg::Path ThetaStarPlanner::createPlan(
   const geometry_msgs::msg::PoseStamped & start,
-  const geometry_msgs::msg::PoseStamped & goal)
+  const geometry_msgs::msg::PoseStamped & goal,
+  std::function<bool()> cancel_checker)
 {
   nav_msgs::msg::Path global_path;
   auto start_time = std::chrono::steady_clock::now();
@@ -140,7 +141,7 @@ nav_msgs::msg::Path ThetaStarPlanner::createPlan(
   RCLCPP_DEBUG(
     logger_, "Got the src and dst... (%i, %i) && (%i, %i)",
     planner_->src_.x, planner_->src_.y, planner_->dst_.x, planner_->dst_.y);
-  getPlan(global_path);
+  getPlan(global_path, cancel_checker);
   // check if a plan is generated
   size_t plan_size = global_path.poses.size();
   if (plan_size > 0) {
@@ -173,13 +174,15 @@ nav_msgs::msg::Path ThetaStarPlanner::createPlan(
   return global_path;
 }
 
-void ThetaStarPlanner::getPlan(nav_msgs::msg::Path & global_path)
+void ThetaStarPlanner::getPlan(
+  nav_msgs::msg::Path & global_path,
+  std::function<bool()> cancel_checker)
 {
   std::vector<coordsW> path;
   if (planner_->isUnsafeToPlan()) {
     global_path.poses.clear();
     throw nav2_core::PlannerException("Either of the start or goal pose are an obstacle! ");
-  } else if (planner_->generatePath(path)) {
+  } else if (planner_->generatePath(path, cancel_checker)) {
     global_path = linearInterpolation(path, planner_->costmap_->getResolution());
   } else {
     global_path.poses.clear();

@@ -13,6 +13,7 @@
 //  limitations under the License.
 
 #include <vector>
+#include "nav2_core/planner_exceptions.hpp"
 #include "nav2_theta_star_planner/theta_star.hpp"
 
 namespace theta_star
@@ -43,7 +44,7 @@ void ThetaStar::setStartAndGoal(
   dst_ = {static_cast<int>(d[0]), static_cast<int>(d[1])};
 }
 
-bool ThetaStar::generatePath(std::vector<coordsW> & raw_path)
+bool ThetaStar::generatePath(std::vector<coordsW> & raw_path, std::function<bool()> cancel_checker)
 {
   resetContainers();
   addToNodesData(index_generated_);
@@ -59,6 +60,11 @@ bool ThetaStar::generatePath(std::vector<coordsW> & raw_path)
 
   while (!queue_.empty()) {
     nodes_opened++;
+
+    if (nodes_opened % cancel_check_interval_ && cancel_checker()) {
+      clearQueue();
+      throw nav2_core::PlannerCancelled("Planner was canceled");
+    }
 
     if (isGoal(*curr_data)) {
       break;

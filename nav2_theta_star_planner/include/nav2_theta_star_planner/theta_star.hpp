@@ -87,7 +87,7 @@ public:
    * @param raw_path is used to return the path obtained by executing the algorithm
    * @return true if a path is found, false if no path is found in between the start and goal pose
    */
-  bool generatePath(std::vector<coordsW> & raw_path);
+  bool generatePath(std::vector<coordsW> & raw_path, std::function<bool()> cancel_checker);
 
   /**
    * @brief this function checks whether the cost of a point(cx, cy) on the costmap is less than the LETHAL_COST
@@ -154,6 +154,8 @@ protected:
     {-1, -1}};
 
   tree_node * exp_node;
+
+  int cancel_check_interval_ = 500;
 
 
   /** @brief it performs a line of sight (los) check between the current node and the parent node of its parent node;

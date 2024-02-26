@@ -235,7 +235,8 @@ void SmacPlannerLattice::cleanup()
 
 nav_msgs::msg::Path SmacPlannerLattice::createPlan(
   const geometry_msgs::msg::PoseStamped & start,
-  const geometry_msgs::msg::PoseStamped & goal)
+  const geometry_msgs::msg::PoseStamped & goal,
+  std::function<bool()> cancel_checker)
 {
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   steady_clock::time_point a = steady_clock::now();
@@ -285,7 +286,8 @@ nav_msgs::msg::Path SmacPlannerLattice::createPlan(
 
   // Note: All exceptions thrown are handled by the planner server and returned to the action
   if (!_a_star->createPath(
-      path, num_iterations, _tolerance / static_cast<float>(_costmap->getResolution())))
+      path, num_iterations, _tolerance / static_cast<float>(_costmap->getResolution()),
+      cancel_checker))
   {
     if (num_iterations < _a_star->getMaxIterations()) {
       throw nav2_core::NoValidPathCouldBeFound("no valid path found");

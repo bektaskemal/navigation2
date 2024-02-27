@@ -89,11 +89,14 @@ TEST(SmootherTest, test_full_smoother)
   int max_iterations = 10000;
   float tolerance = 10.0;
   int it_on_approach = 10;
+  int terminal_checking_interval = 500;
   double max_planning_time = 120.0;
   int num_it = 0;
 
   a_star.initialize(
-    false, max_iterations, std::numeric_limits<int>::max(), max_planning_time, 401, size_theta);
+    false, max_iterations,
+    std::numeric_limits<int>::max(), terminal_checking_interval, max_planning_time, 401,
+    size_theta);
   std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
     std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap, size_theta, node);
   checker->setFootprint(nav2_costmap_2d::Footprint(), true, 0.0);
